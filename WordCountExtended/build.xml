@@ -1,0 +1,96 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE project>
+
+<project name="HM.EDU: Generate Hadoop WordCountExtended" default="complete-build" basedir=".">
+
+	<!-- set global properties for this build -->
+	<property name="config.dir" value="../HadoopBuildEnv" />
+
+	<!-- load global properties (user specific) -->
+	<property file="${user.home}/.ant/global-build.properties" />
+
+	<!-- load global properties (workspace specific) -->
+	<property file="${config.dir}/global-build.properties" />
+
+	<property name="project.name" value="WordCountExtended" />
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath>
+			<pathelement location="${libraries.dir}/ant/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
+
+	<taskdef resource="checkstyletask.properties" classpath="${libraries.dir}/ant/checkstyle-5.5-all.jar" />
+
+	<path id="lib.path">
+		<fileset dir="${libraries.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<target name="complete-build" description="Builds the Hadoop WordCountExtended" depends="print-config,clean,compile,create-jar,generate-javadoc,run-checkstyle" />
+
+	<target name="print-config">
+		<echo message="USER_HOME: ${user.home}" />
+		<echo message="${ant.version}" />
+		<echo message="ANT_HOME: ${ant.home}" />
+		<echo message="${java.runtime.name} (build ${java.runtime.version})" />
+		<echo message="JAVA_HOME: ${java.home}" />
+	</target>
+
+	<target name="clean" description="Clean up all temporary directories and files">
+		<echo message="Pre clean up build and dist directories" />
+		<delete dir="${build.dir}/${project.name}" failonerror="false" />
+		<delete dir="${javadoc.output.dir}/${project.name}" failonerror="false" />
+		<delete file="${checkstyle.output.dir}/results_${project.name}.xml" failonerror="false" />
+	</target>
+
+	<target name="run-checkstyle" description="Checks the style of source code using checkstyle" depends="clean">
+		<echo message="Checking source code style" />
+		<mkdir dir="${checkstyle.output.dir}" />
+		<checkstyle config="${config.dir}/eclipse/checkstyle.config.xml">
+			<fileset dir="${src.dir.default}" includes="**/*.java" />
+			<formatter type="plain" />
+			<formatter type="xml" toFile="${checkstyle.output.dir}/results_${project.name}.xml" />
+		</checkstyle>
+	</target>
+
+	<target name="generate-javadoc" description="Generates the JavaDoc" depends="clean">
+		<echo message="Generating JavaDoc" />
+		<javadoc packagenames="${src.dir.default}" sourcepath="${src.dir.default}" destdir="${javadoc.output.dir}/${project.name}"
+			encoding="${javadoc.execution.encoding}" docencoding="${javadoc.execution.encoding}" charset="${javadoc.execution.encoding}">
+			<classpath refid="lib.path" />
+			<fileset dir="${src.dir.default}">
+				<include name="**/*.java" />
+			</fileset>
+		</javadoc>
+	</target>
+
+	<target name="compile" description="Compiles the resources" depends="clean">
+		<echo message="Compile sources" />
+		<mkdir dir="${build.dir}/${project.name}" />
+		<javac fork="${compile.fork}" srcdir="${src.dir.default}" destdir="${build.dir}/${project.name}" verbose="${compile.verbose}"
+			debug="${compile.debug}" includeantruntime="${compile.antruntime}" encoding="${compile.encoding}">
+			<classpath>
+				<path refid="lib.path" />
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="create-jar" description="Packs the classes into a JAR-file" depends="compile">
+		<echo message="Create jar file" />
+		<jar destfile="${build.dir}/${project.name}.jar" filesetmanifest="merge">
+			<metainf dir="${src.dir.default}/META-INF" />
+			<fileset dir="${build.dir}/${project.name}">
+				<include name="edu/**/*.class" />
+			</fileset>
+			<fileset dir="${src.dir.default}">
+				<include name="**/*.xml" />
+				<include name="**/*.xsd" />
+				<exclude name="META-INF" />
+			</fileset>
+		</jar>
+		<!-- <copy file="${build.dir}/${project.name}.jar" todir="${libraries.cache.dir}" /> -->
+	</target>
+
+</project>

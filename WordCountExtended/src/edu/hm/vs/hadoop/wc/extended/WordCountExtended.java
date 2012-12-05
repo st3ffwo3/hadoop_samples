@@ -114,11 +114,13 @@ public class WordCountExtended extends Configured implements Tool
 
 		private void parseSkipFile( Path patternsFile )
 		{
+			BufferedReader reader = null;
+
 			try
 			{
-				BufferedReader fis = new BufferedReader( new FileReader( patternsFile.toString() ) );
+				reader = new BufferedReader( new FileReader( patternsFile.toString() ) );
 				String pattern = null;
-				while ((pattern = fis.readLine()) != null)
+				while ((pattern = reader.readLine()) != null)
 				{
 					m_patternsToSkip.add( pattern );
 				}
@@ -127,6 +129,18 @@ public class WordCountExtended extends Configured implements Tool
 			{
 				System.err.println( "Caught exception while parsing the cached file '" + patternsFile + "' : "
 						+ StringUtils.stringifyException( ioe ) );
+			}
+			finally
+			{
+				try
+				{
+					reader.close();
+				}
+				catch (IOException e)
+				{
+					// Do nothing
+					return;
+				}
 			}
 		}
 
